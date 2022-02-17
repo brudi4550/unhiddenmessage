@@ -12,10 +12,13 @@ app.use(express.static('public'));
 
 const placeholder_messages = [
     'I love you, Mom & Dad',
-    'Carpe diem',
-    'I can\'t seem to escape my demons',
-    'Caring about caring about others',
-    'keep on keeping on'
+    'Keep on keeping on',
+    'You make me want to be a better person',
+    'I can\'t put into words how much I love you',
+    'Will you marry me?',
+    'Happy birthday!',
+    'I somehow can\'t escape my demons',
+    'I\'m so alone',
 ]
 
 function getRandomMessage() {
@@ -30,7 +33,31 @@ const quotes = [
   {
     'quote': 'We don\'t make mistakes, just happy little accidents.',
     'quotee': 'Bob Ross'
-  }
+  },
+  {
+    'quote': 'Be yourself; everyone else is already taken.',
+    'quotee': 'Oscar Wilde'
+  },
+  {
+    'quote': 'Be who you are and say what you feel, because those who mind don\'t matter, and those who matter don\'t mind.',
+    'quotee': 'Bernard M. Baruch'
+  },
+  {
+    'quote': 'If you don\'t stand for something you will fall for anything.',
+    'quotee': 'Gordon A. Eadie'
+  },
+  {
+    'quote': 'I may not have gone where I intended to go, but I think I have ended up where I needed to be.',
+    'quotee': 'Douglas Adams'
+  },
+  {
+    'quote': 'Life isn\'t about finding yourself. Life is about creating yourself.',
+    'quotee': 'George Bernard Shaw'
+  },
+  {
+    'quote': 'It is better to be hated for what you are than to be loved for what you are not.',
+    'quotee': 'Andre Gide'
+  },
 ]
 
 function getRandomQuote() {
