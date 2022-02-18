@@ -19,6 +19,22 @@ const placeholder_messages = [
     'Happy birthday!',
     'I somehow can\'t escape my demons',
     'I\'m so alone',
+    'Keep fighting',
+    'You are not alone',
+    'I\'m here for you',
+    'Things will get better',
+    'Am I a part of the cure or am I part of the disease?',
+    'Let it go',
+    'Aut inveniam viam aut faciam',
+    'Dum spiro spero',
+    'I\'ve looked at life from both sides now,\nFrom win and lose and still somehow\nIt\'s life\'s illusions I recall\nI really don\'t know life at all',
+    'Now we are free',
+    'I remember those summers that stretched on without end. The future called so loudly, and the oaks, the oaks were silent then. Silence forever conversations in my head, might not have changed your mind, but if we\'d spoken here\'s what I would have said. Erase, destroy this place. Don\'t miss this chance, it will not come again. You mean more thank you may ever know. Don\'t linger where the moss slowly grows.',
+    'Make your life spectacular. I know I did.',
+    'All you touch and all you see - Is all your life will ever be',
+    'Breathe out, so I can breathe you in',
+    'They\'re sharing a drink they call loneliness, but its better than drinking alone',
+    'All I ever wanted\nAll I ever needed \nIs here in my arms\nWords are very unnecessary\nThey can only do harm'
 ]
 
 function getRandomMessage() {
@@ -70,7 +86,7 @@ app.get('/', (req, res) => {
     .update(placeholder_message)
     .digest();
   res.render('index', {
-    title: 'A message hidden in plain sight',
+    title: 'a message hidden in plain sight',
     placeholder_message: placeholder_message,
     quote: getRandomQuote(),
     hash: hash
@@ -83,7 +99,7 @@ app.post('/', (req, res) => {
     .update(input)
     .digest();
   res.render('index', {
-    title: 'A message hidden in plain sight',
+    title: 'a message hidden in plain sight',
     placeholder_message: input,
     quote: getRandomQuote(),
     hash: hash

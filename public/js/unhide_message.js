@@ -204,7 +204,7 @@ function nxtVal() {
 function getHashInfo() {
     var hash = document.getElementById("masterpiece").getAttribute("data-hash");
     hash = JSON.parse(hash);
-    return hash.data
+    return hash.data;
 }
 
 function downloadMessage() {
