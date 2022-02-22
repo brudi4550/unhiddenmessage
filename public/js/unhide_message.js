@@ -9,7 +9,8 @@ var nrOfGradients = 4;
 var minGradientSaturation = 90;
 var gradientStartRadius = 300;
 var gradientEndRadius = 400;
-var mainShapeCnv;
+var mainShapePoints = [];
+var mainShapeRadius;
 var maxWidth = 500;
 var maxHeight = 800;
 
@@ -38,17 +39,48 @@ function setup() {
 function draw() {
     var backgroundCnv = getGradientBackground();
     mainCtx.drawImage(backgroundCnv, 0, 0);
-    mainShapeCnv = getBlobMainShape();
+    var mainShape = Math.round(map(nxtVal(), 0, 255, 0, 2));
+    mainShape = 3;
+    switch (mainShape) {
+        case 0:
+            mainShapeCnv = getBlobShape();
+            break;
+        case 1:
+            mainShapeCnv = getPolygonShape();
+            break;
+        case 2:
+            mainShapeCnv = getRectangleShape();
+            break;
+        case 3:
+            mainShapeCnv = getArcShape();
+            break;
+    }
     mainCtx.drawImage(mainShapeCnv, 0, 0);
-    var secondaryShapeCnv = getCirclesSecondaryShape();
+    var secondaryShape = Math.round(map(nxtVal(), 0, 255, 0, 4));
+    var secondaryShapeCnv;
+    switch (secondaryShape) {
+        case 0:
+            secondaryShapeCnv = getOrderedCircles();
+            break;
+        case 1:
+            secondaryShapeCnv = getUnorderedCircles();
+            break;
+        case 2:
+            secondaryShapeCnv = getLines();
+            break;
+        case 3:
+            secondaryShapeCnv = getOutwardCircles();
+            break;
+        case 4:
+            secondaryShapeCnv = getGrid();
+            break;
+    }
     mainCtx.drawImage(secondaryShapeCnv, 0, 0);
     windowResized();
 }
 
 function getGradientBackground() {
-    var cnv = document.createElement('canvas');
-    cnv.width = W;
-    cnv.height = H;
+    var cnv = getNewCanvas();
     const ctx = cnv.getContext('2d');
 
     qW = W / 4;
@@ -81,59 +113,48 @@ function getGradientBackground() {
     }
 
     order = [];
-    var i = 0;
+    //necessary coeff bc not every hash has a guarenteed value in every order range
+    var add = 1;
     while (order.length != gradientBackgrounds.length) {
-        var elem = Math.round(map(nxtVal(), 0, 255, 0, gradientBackgrounds.length - 1));
+        var overflowingVal = getOverflowingValue(0, 255, nxtVal(), add);
+        add++;
+        var elem = Math.round(map(overflowingVal, 0, 255, 0, gradientBackgrounds.length - 1));
         var contained = false;
-        for (let j = 0; j < order.length; j++) {
-            if (order[j] == elem) {
+        for (let i = 0; i < order.length; i++) {
+            if (order[i] == elem) {
                 contained = true;
             }
         }
         if (!contained) {
-            order[i] = elem;
-            i++;
+            order.push(elem);
         }
     }
 
     ctx.globalCompositeOperation = 'saturation';
-    var blur = map(nxtVal(), 0, 255, 50, 150);
-    ctx.filter = `blur(${blur}px)`;
+    ctx.filter = 'blur(100px)';
     for (let i = 0; i < order.length; i++) {
         ctx.drawImage(gradientBackgrounds[order[i]], 0, 0);
     }
-
-    //single color background to fill gaps
-    var singleColorCnv = document.createElement('canvas');
-    singleColorCnv.width = W;
-    singleColorCnv.height = H;
-    const singleColorCtx = singleColorCnv.getContext('2d');
-    var hue = map(nxtVal(), 0, 255, 0, 360);
-    var saturation = map(nxtVal(), 0, 255, minGradientSaturation, 100)
-    singleColorCtx.fillStyle = `hsla(${hue}, ${saturation}%, 50%, 1)`;
-    singleColorCtx.fillRect(0, 0, W, H);
-    ctx.globalCompositeOperation = 'destination-over';
-    ctx.drawImage(singleColorCnv, 0, 0);
-
     return cnv;
 }
 
-function getBlobMainShape() {
-    const [num, radius] = [1000, 150 + nxtVal() / 3]
+/*
+    MAIN SHAPES
+*/
+function getBlobShape() {
+    const num = 1000;
+    mainShapeRadius = 150 + nxtVal() / 3;
     const pi2 = Math.PI * 2
     const angle = pi2 / num;
     const factor = 0.4;
-    var cnv = document.createElement('canvas');
-    cnv.width = W;
-    cnv.height = H;
+    var cnv = getNewCanvas();
     const ctx = cnv.getContext('2d');
     ctx.fillStyle = 'black';
-    mainShapePoints = [];
     for (var i = 0; i < num; i++) {
         var x = Math.cos(angle * i);
         var y = Math.sin(angle * i);
         var noiseVal = noise(x * factor, y * factor);
-        n = map(noiseVal, 0, 1, 50, radius);
+        n = map(noiseVal, 0, 1, 50, mainShapeRadius);
         p = createVector(x, y).mult(n);
         mainShapePoints.push(new Point(p.x + W / 2, p.y + H / 2));
     }
@@ -147,10 +168,86 @@ function getBlobMainShape() {
     return cnv;
 }
 
-function getCirclesSecondaryShape() {
-    var cnv = document.createElement('canvas');
-    cnv.width = W;
-    cnv.height = H;
+function getPolygonShape() {
+    var cnv = getNewCanvas();
+    var ctx = cnv.getContext('2d');
+    var cx = W / 2;
+    var cy = H / 2;
+    mainShapeRadius = map(nxtVal(), 0, 255, 40, 200);
+    var currAngle = map(nxtVal(), 0, 255, 0, 360);
+    var angleSteps = map(nxtVal(), 0, 255, 40, 120);
+    var i = 0;
+    while (360 % angleSteps != 0) {
+        angleSteps = Math.floor(getOverflowingValue(40, 120, map(nxtVal(), 0, 255, 40, 120), i));
+        i++;
+    }
+    var x = startX = cx + mainShapeRadius * Math.cos(currAngle / 180 * Math.PI);
+    var y = startY = cy + mainShapeRadius * Math.sin(currAngle / 180 * Math.PI);
+    ctx.moveTo(x, y);
+    ctx.beginPath();
+    mainShapePoints.push(new Point(x, y));
+    for (let i = 0; i <= (360 / angleSteps); i++) {
+        ctx.lineTo(x, y);
+        currAngle = getOverflowingValue(0, 360, currAngle, angleSteps);
+        x = cx + mainShapeRadius * Math.cos(currAngle / 180 * Math.PI);
+        y = cy + mainShapeRadius * Math.sin(currAngle / 180 * Math.PI);
+        mainShapePoints.push(new Point(x, y));
+    }
+    for (let i = 0; i < mainShapePoints.length; i++) {
+        var currX = mainShapePoints[i].x;
+        var currY = mainShapePoints[i].y;
+        ctx.moveTo(currX, currY);
+        var nrOfPoints = map(nxtVal(), 0, 255, 0, mainShapePoints.length);
+        for (let j = 0; j < nrOfPoints; j++) {
+            var connect = Math.floor(map(nxtVal(), 0, 255, 0, mainShapePoints.length - 1));
+            ctx.lineTo(mainShapePoints[connect].x, mainShapePoints[connect].y);
+            ctx.moveTo(currX, currY);
+        }
+    }
+    ctx.stroke();
+    return cnv;
+}
+
+function getRectangleShape() {
+    var cnv = getNewCanvas();
+    var ctx = cnv.getContext('2d');
+    ctx.fillRect(50, 50, 150, 150);
+    return cnv;
+}
+
+function getArcShape() {
+    var cnv = getNewCanvas();
+    var ctx = cnv.getContext('2d');
+    ctx.beginPath();
+    const num = 1000;
+    mainShapeRadius = 150 + nxtVal() / 3;
+    const pi2 = Math.PI * 2 - (map(nxtVal(), 0, 255, 1, 4));
+    const angle = pi2 / num;
+    ctx.beginPath();
+    var x = W / 2 + mainShapeRadius * Math.cos(angle);
+    var y = H / 2 + mainShapeRadius * Math.sin(angle);
+    ctx.moveTo(x, y);
+    for (let i = 1; i < num; i++) {
+        x = W / 2 + mainShapeRadius * Math.cos(angle * i);
+        y = H / 2 + mainShapeRadius * Math.sin(angle * i);
+        ctx.lineTo(x, y);
+    }
+    const fullPi2 = Math.PI * 2;
+    const fullAngle = fullPi2 / num;
+    for (let i = 0; i < num; i++) {
+        x = W / 2 + mainShapeRadius * Math.cos(fullAngle * i);
+        y = H / 2 + mainShapeRadius * Math.sin(fullAngle * i);
+        mainShapePoints.push(new Point(x, y));
+    }
+    ctx.stroke();
+    return cnv;
+}
+
+/*
+    SECONDARY SHAPES
+*/
+function getOrderedCircles() {
+    var cnv = getNewCanvas();
     const ctx = cnv.getContext('2d');
     ctx.fillStyle = 'black';
     var xStepDistance = map(nxtVal(), 0, 255, 20, 30);
@@ -180,15 +277,130 @@ function getCirclesSecondaryShape() {
         currX += xStepDistance;
         currY = actualStartY;
     }
-    var helperCnv = document.createElement('canvas');
-    helperCnv.width = W;
-    helperCnv.height = H;
+    redrawMainShapeOverSecondary(cnv);
+    return cnv;
+}
+
+function getUnorderedCircles() {
+    var cnv = getNewCanvas();
+    var ctx = cnv.getContext('2d');
+    var nrOfCircles = map(nxtVal(), 0, 255, 10, 100);
+    for (let i = 0; i < nrOfCircles; i++) {
+        var radius = map(nxtVal(), 0, 255, 2, 20);
+        ctx.beginPath();
+        var x = map(nxtVal(), 0, 255, 0, W);
+        var y = map(nxtVal(), 0, 255, 0, H);
+        ctx.ellipse(x, y, radius, radius, Math.PI / 4, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+    ctx.filter = 'url(#goo)';
+    ctx.drawImage(cnv, 0, 0);
+    redrawMainShapeOverSecondary(cnv);
+    return cnv;
+}
+
+function getLines() {
+    var cnv = getNewCanvas();
+    var ctx = cnv.getContext('2d');
+    var nrOfLines = map(nxtVal(), 0, 255, 3, 8);
+    var nrOfLinesStartingFromLeft = Math.round((W / H) * nrOfLines);
+    var nrOfLinesStartingFromTop = nrOfLines - nrOfLinesStartingFromLeft;
+    var nrOfLinesEndingAtRight = nrOfLinesStartingFromLeft;
+    var nrOfLinesEndingAtBottom = nrOfLinesStartingFromTop;
+    for (let i = 0; i < nrOfLinesStartingFromLeft; i++) {
+        var startX = -10;
+        var startY = map(nxtVal(), 0, 255, 0, H);
+        if (map(nxtVal(), 0, 255, 0, 1) < (W / H)) {
+            var endX = W + 10;
+            var endY = map(nxtVal(), 0, 255, 0, H);
+        } else {
+            var endX = map(nxtVal(), 0, 255, 0, W);
+            var endY = H + 10;
+        }
+        var cpx1 = map(nxtVal(), 0, 255, 0, W);
+        var cpy1 = map(nxtVal(), 0, 255, 0, H);
+        var cpx2 = map(nxtVal(), 0, 255, 0, W);
+        var cpy2 = map(nxtVal(), 0, 255, 0, H);
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.bezierCurveTo(cpx1, cpy1, cpx2, cpy2, endX, endY);
+        ctx.stroke();
+    }
+    redrawMainShapeOverSecondary(cnv);
+    return cnv;
+}
+
+function getOutwardCircles() {
+    const cnv = getNewCanvas();
+    const ctx = cnv.getContext('2d');
+    var currCircleRadius = mainShapeRadius + map(nxtVal(), 0, 255, 20, 100);
+    var x = W / 2;
+    var y = H / 2;
+    const factor = 5;
+    for (let i = 0; i < 10; i++) {
+        ctx.beginPath();
+        ctx.ellipse(x, y, currCircleRadius, currCircleRadius, Math.PI / 4, 0, 2 * Math.PI);
+        ctx.stroke();
+        x += noise(x) * factor;
+        y += noise(y) * factor;
+        currCircleRadius += map(nxtVal(), 0, 255, 10, 50);
+    }
+    return cnv;
+}
+
+function getGrid() {
+    const cnv = getNewCanvas();
+    const ctx = cnv.getContext('2d');
+    var currX = 0;
+    var currY = 0;
+    while (currX < W) {
+        ctx.beginPath();
+        ctx.moveTo(currX, 0);
+        ctx.lineTo(currX, H);
+        ctx.stroke();
+        currX += map(nxtVal(), 0, 255, 20, 100);
+    }
+    while (currY < H) {
+        ctx.beginPath();
+        ctx.moveTo(0, currY);
+        ctx.lineTo(W, currY);
+        ctx.stroke();
+        currY += map(nxtVal(), 0, 255, 20, 100);
+    }
+    redrawMainShapeOverSecondary(cnv);
+    return cnv;
+}
+
+function redrawMainShapeOverSecondary(cnv) {
+    const helperCnv = getNewCanvas();
     const helperCtx = helperCnv.getContext('2d');
-    var transparentFactor = map(nxtVal(), 0, 255, 20, 300);
-    helperCtx.drawImage(mainShapeCnv, 0 - transparentFactor / 2, 0 - transparentFactor / 2, W + transparentFactor, H + transparentFactor);
-    helperCtx.drawImage(helperCnv, 0, 0);
+    helperCtx.beginPath();
+    helperCtx.moveTo(mainShapePoints[0].x, mainShapePoints[0].y);
+    for (let i = 1; i < mainShapePoints.length; i++) {
+        helperCtx.lineTo(mainShapePoints[i].x, mainShapePoints[i].y);
+    }
+    helperCtx.lineTo(mainShapePoints[0].x, mainShapePoints[0].y);
+    helperCtx.fill();
+    var transparentFactor = map(nxtVal(), 0, 255, 100, 200);
+    helperCtx.drawImage(helperCnv, 0 - transparentFactor / 2, 0 - transparentFactor / 2, W + transparentFactor, H + transparentFactor);
+    const ctx = cnv.getContext('2d');
     ctx.globalCompositeOperation = 'destination-out';
     ctx.drawImage(helperCnv, 0, 0);
+}
+
+function getOverflowingValue(rangeStart, rangeEnd, value, add) {
+    var res = value + add;
+    if (res > rangeEnd) {
+        var diff = res - rangeEnd;
+        var res = rangeStart + diff;
+    }
+    return res;
+}
+
+function getNewCanvas() {
+    var cnv = document.createElement('canvas');
+    cnv.width = W;
+    cnv.height = H;
     return cnv;
 }
 
@@ -205,10 +417,6 @@ function getHashInfo() {
     var hash = document.getElementById("masterpiece").getAttribute("data-hash");
     hash = JSON.parse(hash);
     return hash.data;
-}
-
-function downloadMessage() {
-    saveCanvas(mainCanvas, 'unhiddenmessage', 'jpg');
 }
 
 function windowResized() {

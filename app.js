@@ -34,7 +34,8 @@ const placeholder_messages = [
     'All you touch and all you see - Is all your life will ever be',
     'Breathe out, so I can breathe you in',
     'They\'re sharing a drink they call loneliness, but its better than drinking alone',
-    'All I ever wanted\nAll I ever needed \nIs here in my arms\nWords are very unnecessary\nThey can only do harm'
+    'All I ever wanted\nAll I ever needed \nIs here in my arms\nWords are very unnecessary\nThey can only do harm',
+    'Angels lie to keep control'
 ]
 
 function getRandomMessage() {
