@@ -52,18 +52,20 @@ function draw() {
             break;
     }
     mainCtx.drawImage(mainShapeCnv, 0, 0);
-    var secondaryShape = Math.abs(Math.trunc(map(nxtVal(), 0, 255, -0.49, 2.49)));
-    console.log(secondaryShape);
+    var secondaryShape = Math.abs(Math.trunc(map(nxtVal(), 0, 255, -0.49, 3.49)));
     var secondaryShapeCnv;
     switch (secondaryShape) {
         case 0:
             secondaryShapeCnv = getOrderedCircles();
             break;
         case 1:
-            secondaryShapeCnv = getLines();
+            secondaryShapeCnv = getLetters();
             break;
         case 2:
             secondaryShapeCnv = getOutwardCircles();
+            break;
+        case 3:
+            secondaryShapeCnv = getHearts();
             break;
     }
     mainCtx.drawImage(secondaryShapeCnv, 0, 0);
@@ -205,7 +207,7 @@ function getPolygonShape() {
         var currX = mainShapePoints[i].x;
         var currY = mainShapePoints[i].y;
         ctx.moveTo(currX, currY);
-        var nrOfPoints = map(nxtVal(), 0, 255, 0, mainShapePoints.length);
+        var nrOfPoints = map(nxtVal(), 0, 255, 0, mainShapePoints.length / 2);
         for (let j = 0; j < nrOfPoints; j++) {
             var connect = Math.floor(map(nxtVal(), 0, 255, 0, mainShapePoints.length - 1));
             ctx.lineTo(mainShapePoints[connect].x, mainShapePoints[connect].y);
@@ -281,71 +283,121 @@ function getOrderedCircles() {
     return cnv;
 }
 
-function getLines() {
-    var cnv = getNewCanvas();
-    var ctx = cnv.getContext('2d');
-    var nrOfLines = map(nxtVal(), 0, 255, 5, 10);
-    var nrOfLinesStartingFromLeft = Math.round((W / H) * nrOfLines);
-    var nrOfLineStartingFromTop = nrOfLines - nrOfLinesStartingFromLeft;
-    for (let i = 0; i < nrOfLinesStartingFromLeft; i++) {
-        var startX = -10;
-        var startY = map(nxtVal(), 0, 255, 0, H);
-        if (map(nxtVal(), 0, 255, 0, 1) < (W / H)) {
-            var endX = W + 10;
-            var endY = map(nxtVal(), 0, 255, 0, H);
-        } else {
-            var endX = map(nxtVal(), 0, 255, 0, W);
-            var endY = H + 10;
-        }
-        var cpx1 = map(nxtVal(), 0, 255, 0, W);
-        var cpy1 = map(nxtVal(), 0, 255, 0, H);
-        var cpx2 = map(nxtVal(), 0, 255, 0, W);
-        var cpy2 = map(nxtVal(), 0, 255, 0, H);
-        ctx.beginPath();
-        ctx.lineWidth = map(nxtVal(), 0, 255, 0.5, 2.5);
-        ctx.moveTo(startX, startY);
-        ctx.bezierCurveTo(cpx1, cpy1, cpx2, cpy2, endX, endY);
-        ctx.stroke();
+function getLetters() {
+    const cnv = getNewCanvas();
+    const ctx = cnv.getContext('2d');
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    var columns = 10;
+    var rows = 20;
+    var wordInUpper = nxtVal() % 2 == 0;
+    var wordRow;
+    if (wordInUpper) {
+        var wordRow = Math.round(map(nxtVal(), 0, 255, 0, 3));
+    } else {
+        var wordRow = Math.round(map(nxtVal(), 0, 255, rows - 4 - 3, rows - 4));
     }
-
-    for (let i = 0; i < nrOfLineStartingFromTop; i++) {
-        var startX = map(nxtVal(), 0, 255, 0, W);
-        var startY = -10;
-        if (map(nxtVal(), 0, 255, 0, 1) < (W / H)) {
-            var endX = W + 10;
-            var endY = map(nxtVal(), 0, 255, 0, H);
-        } else {
-            var endX = map(nxtVal(), 0, 255, 0, W);
-            var endY = H + 10;
+    var word = getWord();
+    var wordColumnStart = Math.floor(map(nxtVal(), 0, 255, 0, columns - 2 - word.length));
+    var wordColumnEnd = wordColumnStart + word.length;
+    var boxWidth = W / columns;
+    var boxHeight = H / rows;
+    var k = 0;
+    for (let i = 0; i <= columns - 4; i++) {
+        for (let j = 0; j <= rows - 4; j++) {
+            var fontSize = Math.floor(boxWidth * boxHeight / 60);
+            ctx.font = `${fontSize}px \'Press Start 2P\', cursive`;
+            var x = boxWidth * (i + 2);
+            var y = boxHeight * (j + 2);
+            var n = map(nxtVal(), 0, 255, 0, 25);
+            var chr = String.fromCharCode(65 + n);
+            if (j == wordRow && i >= wordColumnStart && i < wordColumnEnd) {
+                chr = word.charAt(k) 
+                k++;
+            }
+            ctx.fillText(chr, x, y);
         }
-        var cpx1 = map(nxtVal(), 0, 255, 0, W);
-        var cpy1 = map(nxtVal(), 0, 255, 0, H);
-        var cpx2 = map(nxtVal(), 0, 255, 0, W);
-        var cpy2 = map(nxtVal(), 0, 255, 0, H);
-        ctx.beginPath();
-        ctx.lineWidth = map(nxtVal(), 0, 255, 0.5, 2.5);
-        ctx.moveTo(startX, startY);
-        ctx.bezierCurveTo(cpx1, cpy1, cpx2, cpy2, endX, endY);
-        ctx.stroke();
     }
     redrawMainShapeOverSecondary(cnv);
     return cnv;
 }
 
+
+
 function getOutwardCircles() {
     const cnv = getNewCanvas();
     const ctx = cnv.getContext('2d');
-    var currCircleRadius = mainShapeRadius + map(nxtVal(), 0, 255, 20, 100);
-    var x = W / 2;
-    var y = H / 2;
-    const factor = 5;
-    for (let i = 0; i < 10; i++) {
+    var currCircleRadius = mainShapeRadius + map(nxtVal(), 0, 255, 10, 20);
+    var cx = W / 2;
+    var cy = H / 2;
+    for (let i = 0; i < 20; i++) {
         ctx.beginPath();
-        ctx.ellipse(x, y, currCircleRadius, currCircleRadius, Math.PI / 4, 0, 2 * Math.PI);
+        ctx.ellipse(cx, cy, currCircleRadius, currCircleRadius, 0, 0, 2 * Math.PI);
         ctx.stroke();
-        x += noise(x) * factor;
-        y += noise(y) * factor;
+        var angle = map(nxtVal(), 0, 255, 0, 360);
+        var xStart = cx + currCircleRadius * Math.cos(angle * (Math.PI / 180));
+        var yStart = cy + currCircleRadius * Math.sin(angle * (Math.PI / 180));
+        var endCircleRadius = currCircleRadius + 500;
+        var xEnd = cx + endCircleRadius * Math.cos(angle * (Math.PI / 180));
+        var yEnd = cy + endCircleRadius * Math.sin(angle * (Math.PI / 180));
+        ctx.moveTo(xStart, yStart);
+        ctx.lineTo(xEnd, yEnd);
+        ctx.stroke();
         currCircleRadius += map(nxtVal(), 0, 255, 10, 50);
+    }
+    return cnv;
+}
+
+function getHearts() {
+    const cnv = getNewCanvas();
+    const ctx = cnv.getContext('2d');
+    var startCircleRadius = mainShapeRadius + map(nxtVal(), 0, 255, 10, 20);
+    var endCircleRadius = startCircleRadius + map(nxtVal(), 0, 255, 20, 40);
+    var angleSteps = map(nxtVal(), 0, 255, 20, 120);
+    var i = 0;
+    while (360 % angleSteps != 0) {
+        angleSteps = Math.floor(getOverflowingValue(20, 120, map(nxtVal(), 0, 255, 20, 120), i));
+        i++;
+    }
+    var currAngle = map(nxtVal(), 0, 255, 0, 360);
+    for (let i = 0; i < 5; i++) {
+        var angleSum = 0;
+        var controlPointRadius = (endCircleRadius - startCircleRadius) * 1.5;
+        currAngle = getOverflowingValue(0, 360, currAngle, 10);
+        while (angleSum <= 360) {
+            var xStart = W / 2 + startCircleRadius * Math.cos(currAngle * (Math.PI / 180));
+            var yStart = H / 2 + startCircleRadius * Math.sin(currAngle * (Math.PI / 180));
+            var xEnd = W / 2 + endCircleRadius * Math.cos(currAngle * (Math.PI / 180));
+            var yEnd = H / 2 + endCircleRadius * Math.sin(currAngle * (Math.PI / 180));
+            var controlPoint11Angle = getOverflowingValue(0, 360, currAngle, -50);
+            var controlPoint12Angle = getOverflowingValue(0, 360, currAngle, -20);
+            var xCp1 = xStart + controlPointRadius * Math.cos(controlPoint11Angle * (Math.PI / 180));
+            var yCp1 = yStart + controlPointRadius * Math.sin(controlPoint11Angle * (Math.PI / 180));
+            var xCp2 = xStart + controlPointRadius * Math.cos(controlPoint12Angle * (Math.PI / 180));
+            var yCp2 = yStart + controlPointRadius * Math.sin(controlPoint12Angle * (Math.PI / 180));
+            ctx.beginPath();
+            ctx.moveTo(xStart, yStart);
+            ctx.bezierCurveTo(xCp1, yCp1, xCp2, yCp2, xEnd, yEnd);
+            var controlPoint21Angle = getOverflowingValue(0, 360, currAngle, 50);
+            var controlPoint22Angle = getOverflowingValue(0, 360, currAngle, 20);
+            var xCp1 = xStart + controlPointRadius * Math.cos(controlPoint21Angle * (Math.PI / 180));
+            var yCp1 = yStart + controlPointRadius * Math.sin(controlPoint21Angle * (Math.PI / 180));
+            var xCp2 = xStart + controlPointRadius * Math.cos(controlPoint22Angle * (Math.PI / 180));
+            var yCp2 = yStart + controlPointRadius * Math.sin(controlPoint22Angle * (Math.PI / 180));
+            ctx.moveTo(xStart, yStart);
+            ctx.bezierCurveTo(xCp1, yCp1, xCp2, yCp2, xEnd, yEnd);
+            if (nxtVal() % 2 == 0) {
+                console.log('even');
+                ctx.fill();
+            } else {
+                console.log('odd');
+                ctx.stroke();
+            }
+            currAngle = getOverflowingValue(0, 360, currAngle, angleSteps);
+            angleSum += angleSteps;
+        }
+        startCircleRadius += 70;
+        endCircleRadius += 70;
     }
     return cnv;
 }
@@ -365,6 +417,15 @@ function redrawMainShapeOverSecondary(cnv) {
     const ctx = cnv.getContext('2d');
     ctx.globalCompositeOperation = 'destination-out';
     ctx.drawImage(helperCnv, 0, 0);
+}
+
+function getWord() {
+    const words = [
+        'LOVE', 'PEACE', 'CALM', 'STORM', 'BROKEN', 'SILENCE', 'ANGST', 'SOUL', 'MEANING', 'CHAOS', 'ORDER', 'FIGHT', 'PAIN', 'RISE', 'CALLING', 'WORTH', 'SUFFER', 'HOPE', 
+        'HELP', 'SELF', 'BODY', 'DARK', 'LIGHT', 'FEAR', 'ANGEL', 'DREAM', 'SURPASS', 'FAITH', 'BLOOD', 'LUST', 'ANGER', 'BEING', 'FORCE', 'TRUST', 'HATE', 'SEEING', 'MORTAL',
+        'REALM', 'FORM', 'TRIUMPH', 'LOSS', 'NOWHERE', 'FREAK', 'MIND', 'CRAZY', 'HURT', 'CRY', 'FEELING', 'THOUGHT', 'MENACE', 'TONIGHT', 'TODAY', 'WHERE', 'HERE', 'CLARITY'
+    ]
+    return words.at(Math.round(map(nxtVal(), 0, 255, 0, words.length - 1)));
 }
 
 function getOverflowingValue(rangeStart, rangeEnd, value, add) {
