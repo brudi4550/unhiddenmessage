@@ -129,7 +129,10 @@ function getGradientBackground() {
     ctx.globalCompositeOperation = 'saturation';
     ctx.filter = 'blur(100px)';
     for (let i = 0; i < order.length; i++) {
-        ctx.drawImage(gradientBackgrounds[order[i]], 0, 0);
+        gradientBackground = gradientBackgrounds[order[i]];
+        if (gradientBackground != null) {
+            ctx.drawImage(gradientBackground, 0, 0);
+        }
     }
     //ctx.filter = 'blur(100px)';
     //ctx.globalCompositeOperation = 'saturation'
@@ -411,8 +414,8 @@ function redrawMainShapeOverSecondary(cnv) {
     helperCtx.lineTo(mainShapePoints[0].x, mainShapePoints[0].y);
     helperCtx.fill();
     var scale = map(nxtVal(), 0, 255, 1.1, 1.3);
-    helperCtx.setTransform(scale, 0, 0, scale, W/2, H/2);
-    helperCtx.drawImage(helperCnv, -W/2, -H/2);
+    helperCtx.setTransform(scale, 0, 0, scale, W / 2, H / 2);
+    helperCtx.drawImage(helperCnv, -W / 2, -H / 2);
     helperCtx.setTransform(1, 0, 0, 1, 0, 0);
     const ctx = cnv.getContext('2d');
     ctx.globalCompositeOperation = 'destination-out';
