@@ -1,18 +1,13 @@
 const hash = getHashInfo();
+const H = getHeightSetting();
+const W = getWidthSetting();
+const qH = H / 4;
+const qW = W / 4;
+
 var mainCanvas;
 var mainCtx;
-var W;
-var H;
-var qW;
-var qH;
-var nrOfGradients = 4;
-var minGradientSaturation = 90;
-var gradientStartRadius = 300;
-var gradientEndRadius = 400;
 var mainShapePoints = [];
 var mainShapeRadius;
-var maxWidth = 500;
-var maxHeight = 800;
 
 var currIdx = 0;
 
@@ -24,16 +19,12 @@ class Point {
 }
 
 function setup() {
-    mainCanvas = createCanvas(maxWidth, maxHeight);
+    mainCanvas = createCanvas(W, H);
     mainCtx = drawingContext;
     mainCanvas.parent('canvas');
     noStroke();
     noLoop();
     noiseSeed(nxtVal() + nxtVal() + nxtVal());
-    W = mainCanvas.width;
-    H = mainCanvas.height;
-    qW = mainCanvas.width / 4;
-    qH = mainCanvas.height / 4;
 }
 
 function draw() {
@@ -54,6 +45,7 @@ function draw() {
     mainCtx.drawImage(mainShapeCnv, 0, 0);
     var secondaryShape = Math.abs(Math.trunc(map(nxtVal(), 0, 255, -0.49, 3.49)));
     var secondaryShapeCnv;
+    secondaryShape = 0;
     switch (secondaryShape) {
         case 0:
             secondaryShapeCnv = getOrderedCircles();
@@ -76,11 +68,11 @@ function getGradientBackground() {
     var cnv = getNewCanvas();
     const ctx = cnv.getContext('2d');
 
-    qW = W / 4;
-    qH = H / 4;
     var gradientsOnXAxis = 2;
     var gradientsOnYAxis = 2;
     var gradientBackgrounds = [];
+    var hue = map(nxtVal(), 0, 255, 0, 360);
+    var colorScheme = Math.abs(Math.trunc(map(nxtVal(), 0, 255, -0.49, 1.49)));
 
     for (let i = 0; i < gradientsOnXAxis; i++) {
         for (let j = 0; j < gradientsOnYAxis; j++) {
@@ -89,16 +81,27 @@ function getGradientBackground() {
             singleColorCn.height = H;
             const gradientCtx = singleColorCn.getContext('2d');
             var xRegionCenter = qW + (i * W / 2);
-            var startX = xRegionCenter + map(nxtVal(), 0, 255, -50, 50);
+            var startX = xRegionCenter + map(nxtVal(), 0, 255, -(W * 0.2), W * 0.2);
             var yRegionCenter = qH + (j * H / 2);
-            var startY = yRegionCenter + map(nxtVal(), 0, 255, -70, 70);
-            var endX = startX + map(nxtVal(), 0, 255, -50, 50);
-            var endY = startY + map(nxtVal(), 0, 255, -50, 50);
-            var hue = map(nxtVal(), 0, 255, 0, 360);
-            var saturation = map(nxtVal(), 0, 255, minGradientSaturation, 100)
+            var startY = yRegionCenter + map(nxtVal(), 0, 255, -(H * 0.2), H * 0.2);
+            var endX = startX + map(nxtVal(), 0, 255, -(W * 0.2), W * 0.2);
+            var endY = startY + map(nxtVal(), 0, 255, -(H * 0.2), H * 0.2);
+            var gradientStartRadius = W / 2;
+            var gradientEndRadius = W;
             var radgrad = ctx.createRadialGradient(startX, startY, gradientStartRadius, endX, endY, gradientEndRadius);
-            radgrad.addColorStop(0, `hsla(${hue}, ${saturation}%, 50%, 1`);
+            var lightness = map(nxtVal(), 0, 255, 30, 70);
+            radgrad.addColorStop(0, `hsla(${hue}, 100%, ${lightness}%, 1`);
             radgrad.addColorStop(1, 'hsla(0,0%,100%,0)');
+            switch (colorScheme) {
+                case 0:
+                    //analog
+                    hue += 30;
+                    break;
+                case 1:
+                    //triadic
+                    hue += 120;
+                    break;
+            }
             gradientCtx.fillStyle = radgrad;
             gradientCtx.fillRect(0, 0, W, H);
             gradientBackgrounds.push(singleColorCn);
@@ -128,20 +131,19 @@ function getGradientBackground() {
     for (let i = 0; i < order.length; i++) {
         ctx.drawImage(gradientBackgrounds[order[i]], 0, 0);
     }
-    ctx.filter = 'blur(30px)';
-    ctx.globalCompositeOperation = 'destination-over'
-    ctx.drawImage(getBackgroundColorBlob(), 0, 0);
+    //ctx.filter = 'blur(100px)';
+    //ctx.globalCompositeOperation = 'saturation'
+    ctx.drawImage(getBackgroundColorBlob(hue), 0, 0);
     return cnv;
 }
 
-function getBackgroundColorBlob() {
+function getBackgroundColorBlob(lastHue) {
     const cnv = getNewCanvas();
     const ctx = cnv.getContext('2d');
     var x = map(nxtVal(), 0, 255, 10, W - 10);
     var y = map(nxtVal(), 0, 255, 10, H - 10);
     var radius = map(nxtVal(), 0, 255, 400, 1000);
-    var hue = map(nxtVal(), 0, 255, 0, 360);
-    ctx.fillStyle = `hsla(${hue}, 100%, 50%, 1`;
+    ctx.fillStyle = `hsla(${lastHue}, 100%, 50%, 1`;
     ctx.beginPath();
     ctx.ellipse(x, y, radius, radius, Math.PI / 4, 0, 2 * Math.PI);
     ctx.fill();
@@ -153,8 +155,8 @@ function getBackgroundColorBlob() {
 */
 function getBlobShape() {
     const num = 1000;
-    mainShapeRadius = 150 + nxtVal() / 3;
-    const pi2 = Math.PI * 2
+    mainShapeRadius = W * 0.25 + nxtVal() / 3;
+    const pi2 = Math.PI * 2;
     const angle = pi2 / num;
     const factor = 0.4;
     var cnv = getNewCanvas();
@@ -183,7 +185,7 @@ function getPolygonShape() {
     var ctx = cnv.getContext('2d');
     var cx = W / 2;
     var cy = H / 2;
-    mainShapeRadius = map(nxtVal(), 0, 255, 40, 200);
+    mainShapeRadius = map(nxtVal(), 0, 255, W * 0.2, W * 0.4);
     var currAngle = map(nxtVal(), 0, 255, 0, 360);
     var angleSteps = map(nxtVal(), 0, 255, 40, 120);
     var i = 0;
@@ -221,7 +223,7 @@ function getPolygonShape() {
 function getArcShape() {
     var cnv = getNewCanvas();
     var ctx = cnv.getContext('2d');
-    mainShapeRadius = radius = 150 + nxtVal() / 3;
+    mainShapeRadius = radius = W * 0.25 + nxtVal() / 3;
     for (let i = 0; i <= 10; i++) {
         ctx.beginPath();
         let x = W / 2;
@@ -252,12 +254,12 @@ function getOrderedCircles() {
     var cnv = getNewCanvas();
     const ctx = cnv.getContext('2d');
     ctx.fillStyle = 'black';
-    var xStepDistance = map(nxtVal(), 0, 255, 20, 30);
-    var yStepDistance = map(nxtVal(), 0, 255, 20, 30);
-    var wantedStartX = map(nxtVal(), 0, 255, 50, W / 2 - 150);
+    var xStepDistance = map(nxtVal(), 0, 255, W * 0.04, W * 0.06);
+    var yStepDistance = map(nxtVal(), 0, 255, W * 0.04, W * 0.06);
+    var wantedStartX = map(nxtVal(), 0, 255, W * 0.1, W / 2 - W * 0.25);
     var endX = W - wantedStartX;
     var wantedXDistance = endX - wantedStartX;
-    var wantedStartY = map(nxtVal(), 0, 255, 50, H / 2 - 150);
+    var wantedStartY = map(nxtVal(), 0, 255, W * 0.1, H / 2 - W * 0.25);
     var endY = H - wantedStartY;
     var wantedYDistance = endY - wantedStartY;
     var nrOfXSteps = Math.floor(wantedXDistance / xStepDistance);
@@ -270,7 +272,7 @@ function getOrderedCircles() {
     var currY = actualStartY;
     for (let i = 0; i <= nrOfXSteps; i++) {
         for (let j = 0; j <= nrOfYSteps; j++) {
-            var radius = map(nxtVal(), 0, 255, 0, 5);
+            var radius = map(nxtVal(), 0, 255, 0, W * 0.01);
             ctx.beginPath();
             ctx.ellipse(currX, currY, radius, radius, Math.PI / 4, 0, 2 * Math.PI);
             ctx.fill();
@@ -312,7 +314,7 @@ function getLetters() {
             var n = map(nxtVal(), 0, 255, 0, 25);
             var chr = String.fromCharCode(65 + n);
             if (j == wordRow && i >= wordColumnStart && i < wordColumnEnd) {
-                chr = word.charAt(k) 
+                chr = word.charAt(k)
                 k++;
             }
             ctx.fillText(chr, x, y);
@@ -321,8 +323,6 @@ function getLetters() {
     redrawMainShapeOverSecondary(cnv);
     return cnv;
 }
-
-
 
 function getOutwardCircles() {
     const cnv = getNewCanvas();
@@ -387,10 +387,8 @@ function getHearts() {
             ctx.moveTo(xStart, yStart);
             ctx.bezierCurveTo(xCp1, yCp1, xCp2, yCp2, xEnd, yEnd);
             if (nxtVal() % 2 == 0) {
-                console.log('even');
                 ctx.fill();
             } else {
-                console.log('odd');
                 ctx.stroke();
             }
             currAngle = getOverflowingValue(0, 360, currAngle, angleSteps);
@@ -412,8 +410,10 @@ function redrawMainShapeOverSecondary(cnv) {
     }
     helperCtx.lineTo(mainShapePoints[0].x, mainShapePoints[0].y);
     helperCtx.fill();
-    var transparentFactor = map(nxtVal(), 0, 255, 100, 200);
-    helperCtx.drawImage(helperCnv, 0 - transparentFactor / 2, 0 - transparentFactor / 2, W + transparentFactor, H + transparentFactor);
+    var scale = map(nxtVal(), 0, 255, 1.1, 1.3);
+    helperCtx.setTransform(scale, 0, 0, scale, W/2, H/2);
+    helperCtx.drawImage(helperCnv, -W/2, -H/2);
+    helperCtx.setTransform(1, 0, 0, 1, 0, 0);
     const ctx = cnv.getContext('2d');
     ctx.globalCompositeOperation = 'destination-out';
     ctx.drawImage(helperCnv, 0, 0);
@@ -421,7 +421,7 @@ function redrawMainShapeOverSecondary(cnv) {
 
 function getWord() {
     const words = [
-        'LOVE', 'PEACE', 'CALM', 'STORM', 'BROKEN', 'SILENCE', 'ANGST', 'SOUL', 'MEANING', 'CHAOS', 'ORDER', 'FIGHT', 'PAIN', 'RISE', 'CALLING', 'WORTH', 'SUFFER', 'HOPE', 
+        'LOVE', 'PEACE', 'CALM', 'STORM', 'BROKEN', 'SILENCE', 'ANGST', 'SOUL', 'MEANING', 'CHAOS', 'ORDER', 'FIGHT', 'PAIN', 'RISE', 'CALLING', 'WORTH', 'SUFFER', 'HOPE',
         'HELP', 'SELF', 'BODY', 'DARK', 'LIGHT', 'FEAR', 'ANGEL', 'DREAM', 'SURPASS', 'FAITH', 'BLOOD', 'LUST', 'ANGER', 'BEING', 'FORCE', 'TRUST', 'HATE', 'SEEING', 'MORTAL',
         'REALM', 'FORM', 'TRIUMPH', 'LOSS', 'NOWHERE', 'FREAK', 'MIND', 'CRAZY', 'HURT', 'CRY', 'FEELING', 'THOUGHT', 'MENACE', 'TONIGHT', 'TODAY', 'WHERE', 'HERE', 'CLARITY'
     ]
@@ -459,13 +459,37 @@ function getHashInfo() {
     return hash.data;
 }
 
+function getHeightSetting() {
+    var height;
+    var settingFound = localStorage.getItem('currentHeightSetting') != 'null';
+    if (settingFound) {
+        height = localStorage.getItem('currentHeightSetting');
+    } else {
+        height = 800;
+        localStorage.setItem('currentHeightSetting', 800);
+    }
+    return height;
+}
+
+function getWidthSetting() {
+    var width;
+    var settingFound = localStorage.getItem('currentWidthSetting') != 'null';
+    if (settingFound) {
+        width = localStorage.getItem('currentWidthSetting');
+    } else {
+        width = 500;
+        localStorage.setItem('currentWidthSetting', 500);
+    }
+    return width;
+}
+
 function windowResized() {
     const container = document.getElementById('canvas');
     const canvas = document.getElementById('defaultCanvas0');
     const currWidth = canvas.style.width.replace("px", "");
     const currHeight = canvas.style.height.replace("px", "");
     const newWidth = container.offsetWidth;
-    if (newWidth < maxWidth) {
+    if (newWidth < width) {
         const factor = newWidth / currWidth;
         const newHeight = currHeight * factor;
         canvas.style.width = container.offsetWidth + 'px';

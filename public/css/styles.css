@@ -54,13 +54,15 @@ svg {
     display: inline-block;
 }
 
-#modal-button {
+#information-modal-button,
+#settings-modal-button,
+#random-button {
     color: white;
     scale: 150%;
-    padding-right: 20px;
+    padding-right: 25px;
 }
 
-#modal {
+.modal {
   display: none;
   position: fixed;
   z-index: 1;
@@ -73,7 +75,7 @@ svg {
   background-color: rgba(0,0,0,0.4);
 }
 
-#modal-content {
+.modal-content {
   color: white;
   background-color: rgb(32, 32, 32);
   margin: 15% auto;
@@ -82,7 +84,8 @@ svg {
   width: 80%;
 }
 
-#close-modal {
+#close-settings-modal,
+#close-information-modal {
   color: #aaa;
   float: right;
   font-size: 28px;
@@ -90,8 +93,10 @@ svg {
   padding: 5px;
 }
 
-#close-modal:hover,
-#close-modal:focus {
+#close-settings-modal:hover,
+#close-settings-modal:focus,
+#close-information-modal:hover,
+#close-information-modal:focus {
   color: white;
   text-decoration: none;
   cursor: pointer;

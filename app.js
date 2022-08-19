@@ -1,3 +1,4 @@
+var http = require('http');
 const dotenv = require('dotenv').config();
 const express = require('express');
 const app = express();
@@ -11,35 +12,27 @@ app.use(express.static('public'));
 
 
 const placeholder_messages = [
-    'I love you, Mom & Dad',
-    'Keep on keeping on',
-    'You make me want to be a better person',
-    'I can\'t put into words how much I love you',
-    'Will you marry me?',
-    'Happy birthday!',
-    'I somehow can\'t escape my demons',
-    'I\'m so alone',
-    'Keep fighting',
-    'You are not alone',
-    'I\'m here for you',
-    'Things will get better',
-    'Am I a part of the cure or am I part of the disease?',
-    'Let it go',
-    'Aut inveniam viam aut faciam',
-    'Dum spiro spero',
-    'I\'ve looked at life from both sides now,\nFrom win and lose and still somehow\nIt\'s life\'s illusions I recall\nI really don\'t know life at all',
-    'Now we are free',
-    'I remember those summers that stretched on without end. The future called so loudly, and the oaks, the oaks were silent then. Silence forever conversations in my head, might not have changed your mind, but if we\'d spoken here\'s what I would have said. Erase, destroy this place. Don\'t miss this chance, it will not come again. You mean more thank you may ever know. Don\'t linger where the moss slowly grows.',
-    'Make your life spectacular. I know I did.',
-    'All you touch and all you see - Is all your life will ever be',
-    'Breathe out, so I can breathe you in',
-    'They\'re sharing a drink they call loneliness, but its better than drinking alone',
-    'All I ever wanted\nAll I ever needed \nIs here in my arms\nWords are very unnecessary\nThey can only do harm',
-    'Angels lie to keep control'
+  'I love you, Mom & Dad',
+  'Keep on keeping on',
+  'You get what you want but not what you need',
+  'I\'ve looked at life from both sides now,\nFrom win and lose and still somehow\nIt\'s life\'s illusions I recall\nI really don\'t know life at all',
+  'Angels lie to keep control',
+  'and now you do what they told ya',
+  'UNSAINTED',
+  'But every once in a while there are those perfect life moments. And that\'s enough. Because it has to be.',
+  'Leben ist zu kurz um Angst zu haben.',
+  'Don\'t hold me up now. I can stand my own ground. I don\'t need your help now. You will let me down.',
+  'Somtimes darkness can show you the light.',
+  'I will remember before I forget.',
+  'I forgive you.',
+  'That\'s when she said \'I don\'t hate you, boy, I just wanna save you while there\'s still something left to save.\'',
+  'That\'s when I told her \'I love you girl, but I\'m not the answer to the questions that you still have.\'',
+  'Schau die Nacht, sie holt heimlich durch des Vorhangs Falten aus deinem Haar den Sonnenschein.',
+  'Die wertvollsten Lektionen tun am meisten weh.'
 ]
 
 function getRandomMessage() {
-    return placeholder_messages[Math.floor(Math.random() * placeholder_messages.length)];
+  return placeholder_messages[Math.floor(Math.random() * placeholder_messages.length)];
 }
 
 const quotes = [
@@ -78,7 +71,7 @@ const quotes = [
 ]
 
 function getRandomQuote() {
-    return quotes[Math.floor(Math.random() * quotes.length)];
+  return quotes[Math.floor(Math.random() * quotes.length)];
 }
 
 app.get('/', (req, res) => {
@@ -88,7 +81,7 @@ app.get('/', (req, res) => {
     .digest();
   res.render('index', {
     title: 'a message hidden in plain sight',
-    placeholder_message: placeholder_message,
+    message: placeholder_message,
     quote: getRandomQuote(),
     hash: hash
   })
@@ -101,10 +94,41 @@ app.post('/', (req, res) => {
     .digest();
   res.render('index', {
     title: 'a message hidden in plain sight',
-    placeholder_message: input,
+    message: input,
     quote: getRandomQuote(),
     hash: hash
   })
+})
+
+app.get('/random', (req, res) => {
+  var input;
+  var options = {
+    host: 'www.quotable.io',
+    path: '/random'
+  };
+
+  var str = '';
+  var json;
+  callback = function (response) {
+    response.on('data', function (chunk) {
+      str += chunk;
+    });
+
+    response.on('end', function () {
+      json = JSON.parse(str);
+      input = json.content;
+      const hash = crypto.createHmac('sha256', process.env.HASH_SECRET)
+        .update(input)
+        .digest();
+      res.render('index', {
+        title: 'a message hidden in plain sight',
+        message: input,
+        quote: getRandomQuote(),
+        hash: hash
+      })
+    });
+  }
+  http.request(options, callback).end();
 })
 
 app.listen(port, () => {

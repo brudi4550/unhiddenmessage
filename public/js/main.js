@@ -1,18 +1,32 @@
-const modal_button = document.getElementById('modal-button');
-const modal = document.getElementById('modal');
-var close_button = document.getElementById('close-modal');
+const information_modal_button = document.getElementById('information-modal-button');
+const information_modal = document.getElementById('information-modal');
+const close_information_modal = document.getElementById('close-information-modal');
 
-modal_button.onclick = function () {
-    modal.style.display = "block";
+const settings_modal_button = document.getElementById('settings-modal-button');
+const settings_modal = document.getElementById('settings-modal');
+const close_settings_modal = document.getElementById('close-settings-modal');
+
+information_modal_button.onclick = function () {
+    information_modal.style.display = "block";
 }
 
-close_button.onclick = function () {
-    modal.style.display = "none";
+settings_modal_button.onclick = function () {
+    settings_modal.style.display = "block";
+}
+
+close_information_modal.onclick = function () {
+    information_modal.style.display = "none";
+}
+
+close_settings_modal.onclick = function () {
+    settings_modal.style.display = "none";
 }
 
 window.onclick = function (event) {
-    if (event.target == modal) {
-        modal.style.display = "none";
+    if (event.target == settings_modal) {
+        settings_modal.style.display = "none";
+    } else if (event.target == information_modal) {
+        information_modal.style.display = "none";
     }
 }
 
@@ -31,4 +45,9 @@ for (let i = 0; i < tx.length; i++) {
 function OnInput() {
     this.style.height = "auto";
     this.style.height = (this.scrollHeight) + "px";
+}
+
+function resize(event) {
+    localStorage.setItem('currentHeightSetting', event.height.value);
+    localStorage.setItem('currentWidthSetting', event.width.value);
 }
