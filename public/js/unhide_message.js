@@ -130,7 +130,7 @@ function getGradientBackground() {
     ctx.filter = 'blur(100px)';
     for (let i = 0; i < order.length; i++) {
         try {
-            ctx.drawImage(gradientBackground, 0, 0);
+            ctx.drawImage(gradientBackgrounds[order[i]], 0, 0);
         } catch (e) {
             console.log(e);
         }
