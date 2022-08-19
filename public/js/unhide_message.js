@@ -129,9 +129,10 @@ function getGradientBackground() {
     ctx.globalCompositeOperation = 'saturation';
     ctx.filter = 'blur(100px)';
     for (let i = 0; i < order.length; i++) {
-        gradientBackground = gradientBackgrounds[order[i]];
-        if (gradientBackground != null) {
+        try {
             ctx.drawImage(gradientBackground, 0, 0);
+        } catch (e) {
+            console.log(e);
         }
     }
     //ctx.filter = 'blur(100px)';
