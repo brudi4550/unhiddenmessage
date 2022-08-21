@@ -76,9 +76,7 @@ function getGradientBackground() {
 
     for (let i = 0; i < gradientsOnXAxis; i++) {
         for (let j = 0; j < gradientsOnYAxis; j++) {
-            var singleColorCn = document.createElement('canvas');
-            singleColorCn.width = W;
-            singleColorCn.height = H;
+            var singleColorCn = getNewCanvas();
             const gradientCtx = singleColorCn.getContext('2d');
             var xRegionCenter = qW + (i * W / 2);
             var startX = xRegionCenter + map(nxtVal(), 0, 255, -(W * 0.2), W * 0.2);
@@ -129,14 +127,8 @@ function getGradientBackground() {
     ctx.globalCompositeOperation = 'saturation';
     ctx.filter = 'blur(100px)';
     for (let i = 0; i < order.length; i++) {
-        try {
-            ctx.drawImage(gradientBackgrounds[order[i]], 0, 0);
-        } catch (e) {
-            console.log(e);
-        }
+        ctx.drawImage(gradientBackgrounds[order[i]], 0, 0);
     }
-    //ctx.filter = 'blur(100px)';
-    //ctx.globalCompositeOperation = 'saturation'
     ctx.drawImage(getBackgroundColorBlob(hue), 0, 0);
     return cnv;
 }
@@ -466,7 +458,8 @@ function getHashInfo() {
 function getHeightSetting() {
     var height;
     var settingFound = localStorage.getItem('currentHeightSetting') != 'null';
-    if (settingFound) {
+    if (localStorage.getItem('currentHeightSetting') != 'null' &&
+        localStorage.getItem('currentHeightSetting') != null) {
         height = localStorage.getItem('currentHeightSetting');
     } else {
         height = 800;
@@ -478,7 +471,8 @@ function getHeightSetting() {
 function getWidthSetting() {
     var width;
     var settingFound = localStorage.getItem('currentWidthSetting') != 'null';
-    if (settingFound) {
+    if (localStorage.getItem('currentWidthSetting') != 'null' &&
+        localStorage.getItem('currentWidthSetting') != null) {
         width = localStorage.getItem('currentWidthSetting');
     } else {
         width = 500;
