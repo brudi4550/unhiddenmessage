@@ -40,6 +40,7 @@ html
         span
           i.bi.bi-x-lg#close-settings-modal
           form(action='/' method='POST' role='form' onsubmit='resize(this)') 
+            p Enter desired size in pixels.
             input(type='hidden' name='message' value=placeholder_message)
             label(for='height') Height:
             input(type='text' id='height' name='height')
@@ -64,7 +65,10 @@ html
             i.bi.bi-github  My GitHub 
           br
           a(href="https://www.alexanderwolf.xyz")
-            i.bi.bi-person-heart  My personal website (coming soon)
+            i.bi.bi-person-heart  My personal website
+          br
+          a(href="https://stackoverflow.com/users/13034776/brudi4550")
+            i.bi.bi-stack-overflow  Stack Overflow
           br
           br
           p If you are using Safari you will get different results since it doesn't support bluring the canvas in Javascript.
