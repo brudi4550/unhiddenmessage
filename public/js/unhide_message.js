@@ -30,19 +30,16 @@ function setup() {
 function draw() {
     var backgroundCnv = getGradientBackground();
     mainCtx.drawImage(backgroundCnv, 0, 0);
-    var mainShape = Math.abs(Math.trunc(map(nxtVal(), 0, 255, -0.49, 2.49)));
-    switch (mainShape) {
-        case 0:
+    var mainShape = map(nxtVal(), 0, 255, 0, 3);
+    if (mainShape < 1) {
             mainShapeCnv = getBlobShape();
-            break;
-        case 1:
+    } else if (mainShape < 2) {
             mainShapeCnv = getPolygonShape();
-            break;
-        case 2:
+    } else {
             mainShapeCnv = getArcShape();
-            break;
     }
     mainCtx.drawImage(mainShapeCnv, 0, 0);
+    //redo secondaryShape selection like above, dont use switch case
     var secondaryShape = Math.abs(Math.trunc(map(nxtVal(), 0, 255, -0.49, 3.49)));
     var secondaryShapeCnv;
     secondaryShape = 0;
@@ -72,7 +69,7 @@ function getGradientBackground() {
     var gradientsOnYAxis = 2;
     var gradientBackgrounds = [];
     var hue = map(nxtVal(), 0, 255, 0, 360);
-    var colorScheme = Math.abs(Math.trunc(map(nxtVal(), 0, 255, -0.49, 1.49)));
+    var colorScheme = map(nxtVal(), 0, 255, 0, 1);
 
     for (let i = 0; i < gradientsOnXAxis; i++) {
         for (let j = 0; j < gradientsOnYAxis; j++) {
@@ -90,15 +87,12 @@ function getGradientBackground() {
             var lightness = map(nxtVal(), 0, 255, 30, 70);
             radgrad.addColorStop(0, `hsla(${hue}, 100%, ${lightness}%, 1`);
             radgrad.addColorStop(1, 'hsla(0,0%,100%,0)');
-            switch (colorScheme) {
-                case 0:
-                    //analog
-                    hue += 30;
-                    break;
-                case 1:
-                    //triadic
-                    hue += 120;
-                    break;
+            if (colorScheme > 0.5) {
+                //analog
+                hue += 30;
+            } else {
+                //triadic
+                hue += 120;
             }
             gradientCtx.fillStyle = radgrad;
             gradientCtx.fillRect(0, 0, W, H);
